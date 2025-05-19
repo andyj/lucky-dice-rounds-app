@@ -1,26 +1,283 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>lucky-dice-rounds-app</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Yahtzee-style dice roller PWA">
+  <meta name="theme-color" content="#f3f4f6">
+  <title>Dice Roller</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.ico">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+  <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f3f4f6;
+      color: #374151;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .die {
+      font-size: 4rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .die.held {
+      background-color: #d1fae5;
+      box-shadow: 0 0 0 2px #10b981;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    button {
+      background-color: #1f2937;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #111827;
+    }
+    button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .roll-counter {
+      text-align: center;
+      font-weight: 600;
+      margin: 1rem 0;
+    }
+    .history-section {
+      margin-top: 2rem;
+      border-top: 1px solid #d1d5db;
+      padding-top: 1rem;
+    }
+    .history-section h2 {
+      margin-bottom: 1rem;
+    }
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .history-item {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .history-item span {
+      font-size: 1.5rem;
+    }
+    .roll-animation {
+      animation: shake 0.5s;
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .empty-message {
+      text-align: center;
+      color: #6b7280;
+      padding: 1rem;
+    }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div x-data="diceGame()" x-init="initialise()">
+    <h1>Dice Roller</h1>
+    
+    <div class="roll-counter">
+      Rolls: <span x-text="rollCount"></span>/<span x-text="maxRolls"></span>
+    </div>
+    
+    <div class="dice-container">
+      <template x-for="(die, index) in dice" :key="index">
+        <div 
+          class="die" 
+          :class="{ 'held': die.held, 'roll-animation': isRolling && !die.held }" 
+          x-text="dieFaces[die.value - 1]"
+          @click="toggleHold(index)"
+          :style="rollCount === 0 ? 'cursor: not-allowed' : ''"
+        ></div>
+      </template>
+    </div>
+    
+    <div class="controls">
+      <button @click="rollDice()" :disabled="rollCount >= maxRolls || isRolling">
+        Roll Dice
+      </button>
+      <button @click="newRound()" :disabled="rollCount === 0 || isRolling">
+        New Round
+      </button>
+    </div>
+    
+    <div class="history-section">
+      <h2>History</h2>
+      <button @click="clearHistory()" :disabled="history.length === 0">
+        Clear History
+      </button>
+      
+      <ul class="history-list">
+        <template x-if="history.length === 0">
+          <li class="empty-message">No dice rolls in history yet.</li>
+        </template>
+        <template x-for="(round, index) in history" :key="index">
+          <li class="history-item">
+            <span x-text="dieFaces[round[0] - 1]"></span>
+            <span x-text="dieFaces[round[1] - 1]"></span>
+            <span x-text="dieFaces[round[2] - 1]"></span>
+            <span x-text="dieFaces[round[3] - 1]"></span>
+            <span x-text="dieFaces[round[4] - 1]"></span>
+          </li>
+        </template>
+      </ul>
+    </div>
+    
+    <footer>
+      <p>Made with Alpine.js • Dice Roller PWA</p>
+    </footer>
+  </div>
 
-    <meta property="og:title" content="lucky-dice-rounds-app" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
-
-  <body>
-    <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(err => {
+            console.error('Service Worker registration failed:', err);
+          });
+      });
+    }
+    
+    function diceGame() {
+      return {
+        dice: Array(5).fill().map(() => ({ value: 1, held: false })),
+        dieFaces: ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'],
+        rollCount: 0,
+        maxRolls: 3,
+        history: [],
+        isRolling: false,
+        
+        initialise() {
+          // Load history from localStorage
+          const savedHistory = localStorage.getItem('diceHistory');
+          if (savedHistory) {
+            this.history = JSON.parse(savedHistory);
+          }
+        },
+        
+        rollDice() {
+          if (this.rollCount >= this.maxRolls) return;
+          
+          this.isRolling = true;
+          
+          // First roll - increment counter
+          if (this.rollCount === 0) {
+            this.rollCount = 1;
+          } else {
+            this.rollCount++;
+          }
+          
+          // Roll animation with sequence
+          setTimeout(() => {
+            this.dice.forEach((die, index) => {
+              if (!die.held) {
+                this.dice[index].value = this.getRandomDieValue();
+              }
+            });
+            this.isRolling = false;
+            
+            // If final roll, save to history
+            if (this.rollCount === this.maxRolls) {
+              this.saveToHistory();
+            }
+          }, 500); // Match animation duration
+        },
+        
+        getRandomDieValue() {
+          return Math.floor(Math.random() * 6) + 1;
+        },
+        
+        toggleHold(index) {
+          // Can only hold/unhold dice after first roll
+          if (this.rollCount > 0 && !this.isRolling) {
+            this.dice[index].held = !this.dice[index].held;
+          }
+        },
+        
+        newRound() {
+          // Reset dice and roll count
+          this.dice.forEach(die => {
+            die.held = false;
+          });
+          this.rollCount = 0;
+        },
+        
+        saveToHistory() {
+          // Get current dice values as an array
+          const currentRoll = this.dice.map(die => die.value);
+          
+          // Add to beginning of history array
+          this.history.unshift(currentRoll);
+          
+          // Limit history to 10 items
+          if (this.history.length > 10) {
+            this.history = this.history.slice(0, 10);
+          }
+          
+          // Save to localStorage
+          localStorage.setItem('diceHistory', JSON.stringify(this.history));
+        },
+        
+        clearHistory() {
+          this.history = [];
+          localStorage.removeItem('diceHistory');
+        }
+      };
+    }
+  </script>
+</body>
 </html>
