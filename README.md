@@ -1,73 +1,144 @@
-# Welcome to your Lovable project
+# Lucky Dice Rounds App
 
-## Project info
+A simple Progressive Web App to simulate Yahtzee-style dice rolling mechanics without scoring. Built with Vite, React, Tailwind CSS and Alpine.js, it rolls five dice (⚀–⚅), lets you hold any between up to three rolls per round, and keeps a ten-round history. The production build is output to `docs/` so you can deploy it as a live demo via GitHub Pages.
 
-**URL**: https://lovable.dev/projects/497e87ee-1cc2-42eb-8178-2bfb6f48e9ae
+---
 
-## How can I edit this code?
+## Demo
 
-There are several ways of editing your application.
+Once built, you can serve the contents of `docs/` on GitHub Pages:
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/497e87ee-1cc2-42eb-8178-2bfb6f48e9ae) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+https://andyj.github.io/lucky-dice-rounds-app/
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Features
 
-**Use GitHub Codespaces**
+- Roll up to three times per round
+- Tap a die to hold or unhold it
+- Roll counter (e.g. Rolls: 1/3)
+- History of the last ten rounds
+- “Clear history” button
+- Fully offline-capable PWA (service worker + manifest)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## Prerequisites
 
-This project is built with:
+- Node.js ≥ 16
+- npm (or Yarn)
+- Git (to clone the repo)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## Getting Started
 
-Simply open [Lovable](https://lovable.dev/projects/497e87ee-1cc2-42eb-8178-2bfb6f48e9ae) and click on Share -> Publish.
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/andyj/lucky-dice-rounds-app.git
+   cd lucky-dice-rounds-app
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn
+   ```
 
-Yes, you can!
+3. **Run in development**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+   Opens at `http://localhost:8080` by default.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Build
+
+By default Vite outputs to `dist/`. We’ve overridden that in `vite.config.js`:
+
+```js
+build: {
+  outDir: 'docs',
+  emptyOutDir: true,
+}
+```
+
+To produce a production build:
+
+```bash
+npm run build
+# or
+yarn build
+```
+
+You’ll find the static files in `docs/`, ready to be published.
+
+---
+
+## Preview
+
+To preview the production build locally:
+
+```bash
+npm run preview
+# or
+yarn preview
+```
+
+---
+
+## Deployment (GitHub Pages)
+
+1. Push your `docs/` folder to the `gh-pages` branch, or configure GitHub to serve from the `docs/` folder on `main`.
+2. In your repo’s **Settings → Pages**, set **Source** to `main` branch and `/docs` folder.
+3. Save and visit your live site at `https://andyj.github.io/lucky-dice-rounds-app/`.
+
+---
+
+## NPM Scripts
+
+| Script       | Description                                  |
+| ------------ | -------------------------------------------- |
+| `dev`        | Start dev server (`localhost:8080`)          |
+| `build`      | Build for production into `docs/`            |
+| `build:dev`  | Build for dev mode (still into `docs/`)      |
+| `preview`    | Preview production build on local server     |
+| `lint`       | Run ESLint over the codebase                 |
+
+---
+
+## Technologies
+
+- **Framework:** React 18, Alpine.js
+- **Bundler:** Vite
+- **Styling:** Tailwind CSS
+- **PWA:** Web App Manifest, Service Worker
+- **History storage:** `localStorage` (pruned to 10 entries)
+
+---
+
+## Project Structure
+
+```
+├── docs/               # Production build (deploy to GitHub Pages)
+├── public/             # Static assets (icons, manifest.json)
+├── src/
+│   ├── components/     # React & Alpine.js components
+│   ├── styles/         # Tailwind CSS entry
+│   └── main.tsx        # App entry point
+├── vite.config.ts      # Vite configuration (build → docs/)
+├── package.json        # Scripts & dependencies
+└── tsconfig.json       # TypeScript config
+```
+
+---
+
+## Licence
+
+MIT © Andy Jarrett
